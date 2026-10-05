@@ -21,11 +21,14 @@ function targetOptions(transitions,current){
   return [...row.entries()].filter(([cls])=>cls!==current).map(([cls,count])=>({cls,p:count/total})).sort((a,b)=>b.p-a.p);
 }
 
+function finiteValue(value,label){
+  if(value===null||value===undefined||typeof value==='string'&&value.trim()==='')throw new Error(`${label} must be a finite number.`);
+  const n=Number(value);if(!Number.isFinite(n))throw new Error(`${label} must be a finite number.`);return n;
+}
 export function projectFutureLandcover({pastRaster,presentRaster,geometry=null,baselineYear,futureYear,intensity=0,random=Math.random}){
   if(!sameGrid(pastRaster,presentRaster))throw new Error('Past and present land-cover rasters must share the same grid.');
-  const base=Number(baselineYear),future=Number(futureYear),strength=Number(intensity);
-  if(!Number.isFinite(base)||!Number.isFinite(future)||future<base)throw new Error('Invalid land-cover projection years.');
-  if(!Number.isFinite(strength))throw new Error('Land-cover intensity must be finite.');
+  const base=finiteValue(baselineYear,'Baseline year'),future=finiteValue(futureYear,'Future year'),strength=finiteValue(intensity,'Land-cover intensity');
+  if(future<base)throw new Error('Invalid land-cover projection years.');
   const transitions=deriveTransitions(pastRaster,presentRaster,geometry);
   const out=new Float32Array(presentRaster.data.length); out.fill(Number.NaN);
   const yearsAhead=future-base;

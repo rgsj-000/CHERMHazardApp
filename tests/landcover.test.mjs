@@ -24,6 +24,10 @@ test('same baseline and future year keeps present classes inside AOI',()=>{
   assert.deepEqual(Array.from(result.data),Array.from(present.data));
 });
 
+test('blank projection inputs are rejected instead of silently becoming zero',()=>{
+  assert.throws(()=>lc.projectFutureLandcover({pastRaster:mk([1,1,2,2]),presentRaster:mk([1,2,2,3]),geometry:null,baselineYear:'',futureYear:2050,intensity:'20',random:()=>0}),/finite/i);
+});
+
 test('landcover module does not expose map rendering functions',()=>{
   const keys=Object.keys(lc).join(' ').toLowerCase();
   assert.doesNotMatch(keys,/leaflet|canvas|overlay|layercontrol|render/);
