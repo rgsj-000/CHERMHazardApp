@@ -9,7 +9,9 @@ function occurrence(value,nodata){if(isNoData(value,nodata))return null;return N
 
 export function buildTrainingSamples({rasters,hazardId,geometry=null,maxSamples=1000,random=Math.random}){
   const ids=[...PREDICTOR_IDS,hazardId]; const base=validateAlignedRasters(rasters,ids);
-  const cap=Math.max(2,Math.floor(Number(maxSamples)||0)); const perClass=Math.max(1,Math.floor(cap/2));
+  if(maxSamples===null||maxSamples===undefined||typeof maxSamples==='string'&&maxSamples.trim()==='')throw new Error('Training sample limit must be a finite number.');
+  const sampleLimit=Number(maxSamples);if(!Number.isFinite(sampleLimit))throw new Error('Training sample limit must be a finite number.');
+  const cap=Math.max(2,Math.floor(sampleLimit)); const perClass=Math.max(1,Math.floor(cap/2));
   const pos=[],neg=[];let seenPos=0,seenNeg=0;
   for(let row=0;row<base.height;row++)for(let col=0;col<base.width;col++){
     const i=row*base.width+col,[lon,lat]=pixelCenter(base,row,col);if(geometry&&!pointInGeometry(lon,lat,geometry))continue;

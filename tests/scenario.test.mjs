@@ -20,3 +20,8 @@ test('valid scenario is normalized to numbers',()=>{
   const s=validateScenario({baselineYear:'2020',futureYear:'2050',rainChange:'12.5',rainMode:'pct',tempChange:'1.5',tempMode:'c',landcoverIntensity:'20'});
   assert.equal(s.futureYear,2050); assert.equal(s.rainChange,12.5); assert.equal(s.landcoverIntensity,20);
 });
+
+test('blank numeric inputs are rejected instead of coercing to zero',()=>{
+  assert.throws(()=>validateScenario({baselineYear:'',futureYear:'2050',rainChange:'12.5',rainMode:'pct',tempChange:'1.5',tempMode:'c',landcoverIntensity:'20'}),/finite/i);
+  assert.throws(()=>applyRainfallChange('',10,'pct'),/finite/i);
+});
