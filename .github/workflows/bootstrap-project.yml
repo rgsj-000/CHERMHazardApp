@@ -1,6 +1,5 @@
 name: Bootstrap CHERM Hazard App
 
-# Retrigger after workflow registration.
 on:
   push:
     branches:
@@ -31,6 +30,7 @@ jobs:
           tar -xzf /tmp/project.tgz -C .
           rm -rf .bootstrap
           rm -f .github/workflows/bootstrap-project.yml
+          rm -f .github/workflows/vendor-assets.yml
 
       - name: Vendor offline runtime assets
         shell: bash
