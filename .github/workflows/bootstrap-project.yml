@@ -1,5 +1,6 @@
 name: Bootstrap CHERM Hazard App
 
+# Retrigger after workflow registration.
 on:
   push:
     branches:
