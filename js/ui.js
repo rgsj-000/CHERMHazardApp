@@ -9,7 +9,16 @@ export function setStatus(message, level = 'info') {
   node.textContent = String(message); node.className = `status ${level}`;
 }
 export function setProgress(percent) {
-  const node = el('progressBar'); if (node) node.style.width = `${clampProgress(percent)}%`;
+  const value=clampProgress(percent);
+  const node = el('progressBar'); if (node) node.style.width = `${value}%`;
+  el('modelProgress')?.setAttribute('aria-valuenow',String(value));
+  const label=el('progressValue');if(label)label.textContent=`${Math.round(value)}%`;
+}
+export function setMapContext({municipality,barangay,floodPeriod,hasFlood=false,inputCount=0}) {
+  const area=el('mapArea'),period=el('mapPeriod'),overview=el('dataOverview');
+  if(area)area.textContent=municipality?[barangay,municipality].filter(Boolean).join(', '):'Quezon Province';
+  if(period)period.textContent=floodPeriod?`${floodPeriod}-year flood`:hasFlood?'Custom flood raster':'No flood raster';
+  if(overview)overview.textContent=`${inputCount} raster inputs loaded`;
 }
 export function appendLog(message) {
   const node = el('log'); if (!node) return;

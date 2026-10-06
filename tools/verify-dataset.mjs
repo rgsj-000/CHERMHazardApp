@@ -54,6 +54,9 @@ try{
   assert.ok(data.tempMin>10&&data.tempMin<35);assert.ok(data.bounds[0]>120&&data.bounds[2]<124);
   assert.deepEqual(data.layers.sort(),['baseline_flood','baseline_landslide']);
   console.log('Automatic loading, alignment, temperature scaling and baseline overlays verified.',JSON.stringify(data));
+  await evaluate("document.getElementById('runScenario').click()");
+  assert.equal(await evaluate("document.activeElement.id"),'municipality');
+  assert.match(await evaluate("document.getElementById('status').textContent"),/Select a Municipality/);
   await evaluate("document.getElementById('municipality').value='ATIMONAN';document.getElementById('municipality').dispatchEvent(new Event('change'))");
   const barangays=await evaluate("document.getElementById('barangay').options.length-1");assert.ok(barangays>0);
   await evaluate("document.getElementById('barangay').selectedIndex=1;document.getElementById('barangay').dispatchEvent(new Event('change'))");
@@ -71,9 +74,17 @@ try{
   assert.match(scenario.status,/Scenario completed/);assert.ok(scenario.landslideFinite&&scenario.floodFinite);
   assert.ok(scenario.layers.includes('future_landslide')&&scenario.layers.includes('future_flood'));
   assert.ok(!scenario.layers.some(key=>/landcover/i.test(key)));
+  for(const expected of [false,true]){
+    await evaluate("Array.from(document.querySelectorAll('.leaflet-control-layers label')).find(el=>el.textContent.trim()==='Future landslide').querySelector('input').click()");
+    assert.equal(await evaluate("(async()=>{const {appState}=await import('/js/state.js');return appState.map.hasLayer(appState.mapLayers.future_landslide);})()"),expected);
+  }
   console.log('Full scenario completed.',JSON.stringify(scenario));
   const screenshot=await send('Page.captureScreenshot',{format:'png'});
   await writeFile(new URL('rstw2026-map.png',base),Buffer.from(screenshot.data,'base64'));
+  await send('Emulation.setDeviceMetricsOverride',{width:1280,height:600,deviceScaleFactor:1,mobile:false});await delay(250);
+  const shortScreen=await evaluate(`(()=>{const box=el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};};const layers=box(document.querySelector('.leaflet-control-layers'));const legends=Array.from(document.querySelectorAll('.hazard-legend')).map(box);return {layers,legends,overlap:legends.some(r=>r.left<layers.right&&r.right>layers.left&&r.top<layers.bottom&&r.bottom>layers.top)};})()`);
+  assert.equal(shortScreen.overlap,false,JSON.stringify(shortScreen));
+  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});await delay(250);
   await evaluate("document.getElementById('floodPeriod').value='25';document.getElementById('floodPeriod').dispatchEvent(new Event('change'))");
   await waitFor("document.getElementById('status').textContent.startsWith('25-year flood raster loaded')");
   assert.ok(await evaluate("(async()=>{const {appState}=await import('/js/state.js');return !appState.mapLayers.future_flood&&!appState.mapLayers.future_landslide;})()"));
@@ -89,8 +100,42 @@ try{
   await evaluate("document.querySelector('.sidebar').scrollTop=2000");
   const partialScreenshot=await send('Page.captureScreenshot',{format:'png'});
   await writeFile(new URL('atimonan-magsaysay-25yr.png',base),Buffer.from(partialScreenshot.data,'base64'));
+  assert.equal(await evaluate("document.getElementById('mapArea').textContent"),'Magsaysay, ATIMONAN');
+  assert.equal(await evaluate("document.getElementById('mapPeriod').textContent"),'25-year flood');
+  assert.equal(await evaluate("document.getElementById('modelProgress').getAttribute('aria-valuenow')"),'100');
+  assert.equal(await evaluate("document.getElementById('runScenario').getAttribute('aria-busy')"),'false');
+  const unnamed=await evaluate("Array.from(document.querySelectorAll('.sidebar input,.sidebar select')).filter(el=>!el.labels?.length&&!el.getAttribute('aria-label')).map(el=>el.id)");
+  assert.deepEqual(unnamed,[]);
+  await evaluate("document.querySelector('.advanced-settings summary').focus()");
+  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r'});
+  await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+  await delay(100);
+  assert.equal(await evaluate("document.querySelector('.advanced-settings').open"),true);
+  assert.ok(await evaluate("parseFloat(getComputedStyle(document.activeElement).outlineWidth)>=3"));
+  await evaluate("document.querySelectorAll('details').forEach(el=>el.open=true)");
+  const responsive=[];
+  for(const width of [375,768,1024,1440]){
+    await send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:false});
+    await delay(250);
+    const layout=await evaluate(`({width:innerWidth,pageWidth:document.documentElement.scrollWidth,overflowingControls:Array.from(document.querySelectorAll('.sidebar input,.sidebar select,.sidebar button')).filter(el=>el.getBoundingClientRect().right>innerWidth).map(el=>el.id),mapHeight:document.getElementById('map').getBoundingClientRect().height,checkboxWidth:document.querySelector('.leaflet-control-layers input').getBoundingClientRect().width})`);
+    assert.ok(layout.pageWidth<=width,JSON.stringify(layout));assert.deepEqual(layout.overflowingControls,[]);
+    assert.ok(layout.mapHeight>=400);assert.ok(layout.checkboxWidth<=20);
+    responsive.push(layout);
+  }
+  await evaluate("document.activeElement.blur();document.querySelectorAll('details').forEach(el=>el.open=false);document.querySelector('.results-panel details').open=true;document.querySelector('.sidebar').scrollTop=0;window.scrollTo(0,0)");
+  const desktopUi=await send('Page.captureScreenshot',{format:'png'});
+  await writeFile(new URL('ui-desktop.png',base),Buffer.from(desktopUi.data,'base64'));
+  await send('Emulation.setDeviceMetricsOverride',{width:375,height:900,deviceScaleFactor:1,mobile:false});
+  await delay(250);
+  const mobileUi=await send('Page.captureScreenshot',{format:'png'});
+  await writeFile(new URL('ui-mobile.png',base),Buffer.from(mobileUi.data,'base64'));
+  await evaluate("document.querySelector('.map-link').click()");await delay(250);
+  assert.ok(await evaluate("document.getElementById('mapWorkspace').getBoundingClientRect().top<innerHeight&&scrollY>0"));
+  const mobileMap=await send('Page.captureScreenshot',{format:'png'});
+  await writeFile(new URL('ui-mobile-map.png',base),Buffer.from(mobileMap.data,'base64'));
+  console.log('Responsive layouts, keyboard disclosure, accessible labels, progress and map context verified.',JSON.stringify(responsive));
   assert.deepEqual(errors,[]);
-  const report={data,atimonanBarangays:barangays,scenario,partial,uncaughtExceptions:errors.length};
+  const report={data,atimonanBarangays:barangays,scenario,partial,responsive,shortScreen,uncaughtExceptions:errors.length};
   await writeFile(new URL('rstw2026-check.json',base),JSON.stringify(report,null,2)+'\n');
   console.log('Future results are cleared on input change; no uncaught browser exceptions.');
 }finally{

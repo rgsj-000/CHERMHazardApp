@@ -3,93 +3,94 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#133b46">
   <title>CHERM Climate & Land-Cover Hazard Impact Simulator</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+<a class="skip-link" href="#scenarioWorkspace">Skip to scenario controls</a>
 <header class="app-header">
-  <div>
-    <h1>Climate & Land-Cover Hazard Impact Simulator</h1>
-    <p>Rain-induced landslide and flood scenario modeling from local GIS data</p>
+  <div class="brand">
+    <img class="brand-mark" src="assets/brand/cherm-logo.jpg" alt="CHERM logo" width="390" height="490" decoding="async">
+    <div><p class="brand-eyebrow">CHERM · Quezon Province</p><h1>Hazard Scenario Studio</h1></div>
   </div>
-  <div id="onlineStatus" class="connection-badge">Checking connection…</div>
+  <div class="header-actions"><a class="map-link" href="#mapWorkspace">View map <span aria-hidden="true">↗</span></a><div id="onlineStatus" class="connection-badge">Checking connection…</div></div>
 </header>
 <div class="app-layout">
-  <aside class="sidebar">
-    <section class="panel">
-      <h2>1. Area of Interest</h2>
-      <button id="loadBundledDataset" type="button">Reload RSTW2026 data</button>
-      <p id="datasetStatus" class="hint" role="status">Loading bundled Quezon boundaries and rasters…</p>
-      <label for="municipalityFile">Municipality polygons (GeoJSON)</label>
-      <input id="municipalityFile" type="file" accept=".geojson,.json">
-      <label for="barangayFile">Barangay polygons (GeoJSON)</label>
-      <input id="barangayFile" type="file" accept=".geojson,.json">
+  <aside id="scenarioWorkspace" class="sidebar" aria-label="Scenario workspace" tabindex="-1">
+    <div class="workspace-intro"><p class="eyebrow">Climate & land-cover impact</p><h2>Build your scenario</h2><p>Explore future landslide and flood susceptibility for your area.</p><p id="dataOverview" class="data-overview">Loading local model inputs…</p></div>
+    <section class="panel" aria-labelledby="areaHeading">
+      <div class="section-heading"><span class="step" aria-hidden="true">01</span><h2 id="areaHeading">Choose an area</h2></div>
       <div class="grid-2">
         <div><label for="municipality">Municipality</label><select id="municipality"><option value="">Load boundaries first</option></select></div>
-        <div><label for="barangay">Barangay</label><select id="barangay"><option value="">All barangays</option></select></div>
+        <div><label for="barangay">Barangay <span class="optional">optional</span></label><select id="barangay"><option value="">All barangays</option></select></div>
       </div>
+      <p class="hint">Select a barangay to focus the model, or use the whole municipality.</p>
     </section>
-
-    <section class="panel">
-      <h2>2. Environmental Rasters</h2>
-      <label for="floodPeriod">Bundled flood return period</label>
-      <select id="floodPeriod"><option value="5">5-year flood</option><option value="25">25-year flood</option><option value="100">100-year flood</option></select>
-      <label for="temperatureScale">Bundled temperature units</label>
-      <select id="temperatureScale"><option value="0.1">Tenths of °C (divide by 10)</option><option value="1">Source values are already °C</option></select>
-      <p class="hint">Prepared grid: approximately 150 m. Original resolution is kept in data/source/. Temperature units can be changed above.</p>
-      <div id="rasterInputs"></div>
-      <p class="hint">GeoTIFF rasters must use the same CRS, dimensions, extent, cell size and alignment.</p>
-    </section>
-
-    <section class="panel">
-      <h2>3. Basemap</h2>
-      <label for="localBasemap">Optional local GeoTIFF basemap</label>
-      <input id="localBasemap" type="file" accept=".tif,.tiff">
-      <p class="hint">OpenStreetMap is used when online. Offline mode continues with a local raster or neutral background.</p>
-    </section>
-
-    <section class="panel">
-      <h2>4. Scenario Controls</h2>
+    <section class="panel" aria-labelledby="scenarioHeading">
+      <div class="section-heading"><span class="step" aria-hidden="true">02</span><h2 id="scenarioHeading">Set the scenario</h2><span class="section-tag">What if?</span></div>
       <div class="grid-2">
         <div><label for="baselineYear">Baseline year</label><input id="baselineYear" type="number" value="2020" min="1900" max="2200"></div>
         <div><label for="futureYear">Future year</label><input id="futureYear" type="number" value="2050" min="1900" max="2200"></div>
       </div>
-      <label>Rainfall change</label>
-      <div class="control-row"><input id="rainSlider" type="range" min="-80" max="100" step="0.1" value="10"><input id="rainValue" type="number" step="0.1" value="10"><select id="rainMode"><option value="pct">%</option><option value="mm">mm/year</option></select></div>
-      <label>Temperature change</label>
-      <div class="control-row"><input id="tempSlider" type="range" min="-10" max="10" step="0.1" value="1"><input id="tempValue" type="number" step="0.1" value="1"><select id="tempMode"><option value="c">°C</option><option value="pct">%</option></select></div>
-      <label>Land-cover change intensity (%)</label>
-      <div class="control-row two"><input id="lcSlider" type="range" min="-100" max="100" step="1" value="20"><input id="lcValue" type="number" step="1" value="20"></div>
-      <div class="grid-2">
-        <div><label for="trees">RF trees</label><input id="trees" type="number" min="5" max="200" value="35"></div>
-        <div><label for="samples">Training sample limit</label><input id="samples" type="number" min="50" max="10000" value="1000"></div>
-      </div>
+      <fieldset class="change-control"><legend>Rainfall change</legend>
+        <div class="control-row"><input id="rainSlider" aria-label="Rainfall change slider" type="range" min="-80" max="100" step="0.1" value="10"><input id="rainValue" aria-label="Rainfall change value" type="number" step="0.1" value="10"><select id="rainMode" aria-label="Rainfall change units"><option value="pct">%</option><option value="mm">mm/year</option></select></div>
+      </fieldset>
+      <fieldset class="change-control"><legend>Temperature change</legend>
+        <div class="control-row"><input id="tempSlider" aria-label="Temperature change slider" type="range" min="-10" max="10" step="0.1" value="1"><input id="tempValue" aria-label="Temperature change value" type="number" step="0.1" value="1"><select id="tempMode" aria-label="Temperature change units"><option value="c">°C</option><option value="pct">%</option></select></div>
+      </fieldset>
+      <fieldset class="change-control"><legend>Land-cover change intensity (%)</legend>
+        <div class="control-row two"><input id="lcSlider" aria-label="Land-cover change intensity slider" type="range" min="-100" max="100" step="1" value="20"><input id="lcValue" aria-label="Land-cover change intensity percent" type="number" step="1" value="20"></div>
+      </fieldset>
+      <label for="floodPeriod">Flood return period</label>
+      <select id="floodPeriod"><option value="5">5-year flood</option><option value="25">25-year flood</option><option value="100">100-year flood</option></select>
+      <details class="disclosure advanced-settings"><summary>Advanced model settings</summary>
+        <div class="grid-2">
+          <div><label for="trees">Random forest trees</label><input id="trees" type="number" min="5" max="200" value="35"></div>
+          <div><label for="samples">Training sample limit</label><input id="samples" type="number" min="50" max="10000" value="1000"></div>
+        </div>
+      </details>
     </section>
-
-    <section class="panel">
-      <h2>5. Run Model</h2>
-      <button id="runScenario" type="button">Run complete scenario</button>
-      <div class="progress" aria-label="model progress"><div id="progressBar"></div></div>
-      <div id="status" class="status info">Loading RSTW2026 data…</div>
+    <section class="panel run-panel" aria-labelledby="runHeading">
+      <div class="section-heading"><span class="step" aria-hidden="true">03</span><h2 id="runHeading">Generate results</h2></div>
+      <button id="runScenario" type="button"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7 4 9 6-9 6V4Z" fill="currentColor"/></svg><span>Run complete scenario</span></button>
+      <div class="progress-heading"><span>Model progress</span><span id="progressValue">0%</span></div>
+      <div id="modelProgress" class="progress" role="progressbar" aria-label="Model progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressBar"></div></div>
+      <div id="status" class="status info" role="status" aria-live="polite" aria-atomic="true">Loading RSTW2026 data…</div>
     </section>
-
-    <section class="panel">
-      <h2>6. Layers</h2>
+    <section class="panel results-panel" aria-labelledby="resultsHeading">
+      <div class="section-heading"><h2 id="resultsHeading">Results & coverage</h2></div>
       <div id="layerList" class="layer-list">No hazard outputs yet.</div>
+      <p class="hint">Use the map’s layer controls to compare present and future hazards.</p>
+      <details class="disclosure" open><summary>Model diagnostics</summary><div id="diagnostics" class="diagnostics">Choose an area and run a scenario to see model coverage.</div></details>
     </section>
-
-    <section class="panel">
-      <h2>7. Diagnostics</h2>
-      <div id="diagnostics" class="diagnostics">Waiting for inputs.</div>
-    </section>
-
-    <section class="panel">
-      <h2>Processing Log</h2>
-      <pre id="log"></pre>
-    </section>
+    <details class="panel data-panel" id="dataSettings"><summary>Data & basemap <span class="optional">RSTW2026</span></summary>
+      <p id="datasetStatus" class="hint" role="status">Loading bundled Quezon boundaries and rasters…</p>
+      <button id="loadBundledDataset" class="secondary-button" type="button">Reload RSTW2026 data</button>
+      <details class="disclosure"><summary>Replace area boundaries</summary>
+        <label for="municipalityFile">Municipality polygons (GeoJSON)</label><input id="municipalityFile" type="file" accept=".geojson,.json">
+        <label for="barangayFile">Barangay polygons (GeoJSON)</label><input id="barangayFile" type="file" accept=".geojson,.json">
+      </details>
+      <details class="disclosure"><summary>Environmental rasters</summary>
+        <label for="temperatureScale">Bundled temperature units</label>
+        <select id="temperatureScale"><option value="0.1">Tenths of °C (divide by 10)</option><option value="1">Source values are already °C</option></select>
+        <p class="hint">Prepared grid: approximately 150 m. Replacement GeoTIFFs must share the same coordinate system, dimensions, extent and alignment.</p>
+        <div id="rasterInputs"></div>
+      </details>
+      <details class="disclosure"><summary>Basemap options</summary>
+        <label for="localBasemap">Local GeoTIFF basemap <span class="optional">optional</span></label><input id="localBasemap" type="file" accept=".tif,.tiff">
+        <p class="hint">OpenStreetMap is used when online. Offline, use a local raster or the neutral background.</p>
+      </details>
+    </details>
+    <details class="panel log-panel"><summary>Processing log</summary><pre id="log" tabindex="0" aria-label="Processing log"></pre></details>
+    <p class="workspace-note">Relative susceptibility scores, not calibrated probabilities.</p>
   </aside>
-  <main class="map-column"><div id="map" aria-label="Hazard map"></div></main>
+  <main id="mapWorkspace" class="map-column" tabindex="-1" aria-label="Hazard map workspace">
+    <div class="map-toolbar"><div><p class="eyebrow">Area of interest</p><h2 id="mapArea">Quezon Province</h2></div><span id="mapPeriod" class="map-period">5-year flood</span></div>
+    <div id="map" aria-label="Interactive hazard map"></div>
+    <div class="map-caption"><span>Present & future hazard layers</span><a href="#scenarioWorkspace">Scenario controls <span aria-hidden="true">↑</span></a></div>
+  </main>
 </div>
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="vendor/geotiff/geotiff.js"></script>

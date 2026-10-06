@@ -8,6 +8,8 @@ The simulator automatically loads the bundled RSTW2026 Quezon dataset, supports 
 
 Launch `start.bat`, wait for the dataset to load, select a Municipality (and optionally a Barangay), then run a scenario. File selection is only needed to replace bundled inputs. Use **Reload RSTW2026 data** to restore the defaults.
 
+The workspace groups this flow into **Choose an area**, **Set the scenario**, and **Generate results**. Expand **Advanced model settings** for tree and sample limits. **Data & basemap** contains reload, replacement boundaries/rasters, temperature units, and local basemap options. Results and coverage diagnostics appear below the Run button. On smaller screens, **View map** and **Scenario controls** links move between the controls and map.
+
 * `data/boundaries/`: WGS 84 GeoJSON for 40 municipalities and 1,243 barangays.
 * `data/rasters/predictors/`: elevation, slope, river/urban/coast distance, rainfall, temperature and flow accumulation.
 * `data/rasters/landcover/`: past and present land cover.
@@ -106,11 +108,21 @@ When the laptop is online, OpenStreetMap is used as the default basemap. When of
 
 ## macOS / Linux development launch
 
-`start.sh` uses Python 3's basic HTTP server when Python is installed:
+`start.sh` uses the included standard-library Python server (Python 3.7 or newer, no extra packages):
 
 ```bash
 ./start.sh
 ```
+
+It opens the browser after the server is ready, binds only to `127.0.0.1`, and tries nearby ports if port 8000 is occupied. The terminal prints the actual URL and stays open while serving. Press Ctrl+C to stop. Startup errors remain visible, and an interactive terminal waits for Enter after an error.
+
+To choose a preferred port or skip opening the browser:
+
+```bash
+./start.sh --port 8765 --no-browser
+```
+
+Port `0` chooses any available port. The Windows-style `-Port` and `-NoBrowser` options also work. The launcher finds the app files correctly when started from another directory or a path containing spaces.
 
 ## Development
 
