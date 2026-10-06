@@ -1,0 +1,370 @@
+{
+  "name": "RSTW2026 Quezon environmental predictors",
+  "defaultFloodPeriod": "5",
+  "boundaries": {
+    "municipality": "boundaries/municipality.geojson",
+    "barangay": "boundaries/barangay.geojson"
+  },
+  "rasters": {
+    "dem": {
+      "path": "rasters/predictors/elevation.tif",
+      "source": "source/rstw2026/predictors/elevation.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5482,
+        "height": 7483,
+        "bbox": [
+          311634.2993510929,
+          1454969.6061733286,
+          478723.96909218316,
+          1683049.1389483337
+        ],
+        "nodata": -3.4028234663852886e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 396446,
+      "min": -0.44878143072128296,
+      "max": 2120.1328125
+    },
+    "slope": {
+      "path": "rasters/predictors/slope.tif",
+      "source": "source/rstw2026/predictors/slope.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5482,
+        "height": 7483,
+        "bbox": [
+          311634.2993510929,
+          1454969.6061733286,
+          478723.96909218316,
+          1683049.1389483337
+        ],
+        "nodata": 3.3999999521443642e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 394801,
+      "min": 0.0,
+      "max": 146.00621032714844
+    },
+    "distRiver": {
+      "path": "rasters/predictors/dist2river.tif",
+      "source": "source/rstw2026/predictors/dist2river.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5482,
+        "height": 7483,
+        "bbox": [
+          311634.2993510929,
+          1454969.6061733286,
+          478723.96909218316,
+          1683049.1389483337
+        ],
+        "nodata": 3.3999999521443642e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 396446,
+      "min": 21.611581802368164,
+      "max": 25400.630859375
+    },
+    "distUrban": {
+      "path": "rasters/predictors/dist2urban.tif",
+      "source": "source/rstw2026/predictors/dist2urban.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5546,
+        "height": 7530,
+        "bbox": [
+          309896.95692583895,
+          1454299.052956564,
+          478937.32693388104,
+          1683811.1312401118
+        ],
+        "nodata": 3.3999999521443642e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 396446,
+      "min": 0.0,
+      "max": 18383.9765625
+    },
+    "rain": {
+      "path": "rasters/predictors/ann_rain_v2.tif",
+      "source": "source/rstw2026/predictors/ann_rain_v2.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5456,
+        "height": 7477,
+        "bbox": [
+          312274.37287618645,
+          1455000.0858649998,
+          478571.57063382753,
+          1682896.7404899783
+        ],
+        "nodata": -3.4028234663852886e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 396446,
+      "min": 1306.814697265625,
+      "max": 3666.16845703125
+    },
+    "temp": {
+      "path": "rasters/predictors/ann_temp_v2.tif",
+      "source": "source/rstw2026/predictors/ann_temp_v2.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5482,
+        "height": 7483,
+        "bbox": [
+          311634.2993510929,
+          1454969.6061733286,
+          478723.96909218316,
+          1683049.1389483337
+        ],
+        "nodata": -3.4028234663852886e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 396446,
+      "min": 168.8719940185547,
+      "max": 270.7044372558594
+    },
+    "distCoast": {
+      "path": "rasters/predictors/dist2coast4.tif",
+      "source": "source/rstw2026/predictors/dist2coast4.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5456,
+        "height": 7477,
+        "bbox": [
+          312274.37287618645,
+          1455000.0858649998,
+          478571.57063382753,
+          1682896.7404899783
+        ],
+        "nodata": 3.3999999521443642e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 396446,
+      "min": 27.99485206604004,
+      "max": 57669.26171875
+    },
+    "flowAcc": {
+      "path": "rasters/predictors/flowacc.tif",
+      "source": "source/rstw2026/predictors/flowacc.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5482,
+        "height": 7483,
+        "bbox": [
+          311634.2993510929,
+          1454969.6061733286,
+          478723.96909218316,
+          1683049.1389483337
+        ],
+        "nodata": 3.3999999521443642e+38
+      },
+      "resampling": "bilinear",
+      "scale": 1,
+      "validCells": 396446,
+      "min": 0.15531772375106812,
+      "max": 129248.1484375
+    },
+    "pastLC": {
+      "path": "rasters/landcover/past_landcover.tif",
+      "source": "source/rstw2026/landcover/past_landcover.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5483,
+        "height": 7484,
+        "bbox": [
+          311632.02335739846,
+          1454957.6850936995,
+          478752.1727901598,
+          1683067.6975603758
+        ],
+        "nodata": 65535.0
+      },
+      "resampling": "nearest",
+      "scale": 1,
+      "validCells": 396356,
+      "min": 7.0,
+      "max": 254.0
+    },
+    "presentLC": {
+      "path": "rasters/landcover/present_landcover.tif",
+      "source": "source/rstw2026/landcover/present_landcover.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5483,
+        "height": 7484,
+        "bbox": [
+          311632.02335739846,
+          1454957.6850936995,
+          478752.1727901598,
+          1683067.6975603758
+        ],
+        "nodata": 65535.0
+      },
+      "resampling": "nearest",
+      "scale": 1,
+      "validCells": 396356,
+      "min": 0.0,
+      "max": 254.0
+    },
+    "landslide": {
+      "path": "rasters/hazards/landslide.tif",
+      "source": "source/rstw2026/hazards/landslide.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5546,
+        "height": 7530,
+        "bbox": [
+          309896.95692583895,
+          1454299.052956564,
+          478937.32693388104,
+          1683811.1312401118
+        ],
+        "nodata": 0.0
+      },
+      "resampling": "nearest",
+      "scale": 1,
+      "validCells": 169122,
+      "min": 1.0,
+      "max": 3.0,
+      "target": {
+        "kind": "susceptibility",
+        "min": 1.0,
+        "max": 3.0
+      }
+    },
+    "flood": {
+      "path": "rasters/hazards/5yr_flood.tif",
+      "source": "source/rstw2026/hazards/5yr_flood.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5547,
+        "height": 7531,
+        "bbox": [
+          308139.79125045653,
+          1453619.1443885965,
+          479139.7561863555,
+          1684577.8245083357
+        ],
+        "nodata": null
+      },
+      "resampling": "nearest",
+      "scale": 1,
+      "validCells": 397403,
+      "min": 0.0,
+      "max": 3.0,
+      "target": {
+        "kind": "susceptibility",
+        "min": 0.0,
+        "max": 3.0
+      }
+    }
+  },
+  "floods": {
+    "5": {
+      "path": "rasters/hazards/5yr_flood.tif",
+      "source": "source/rstw2026/hazards/5yr_flood.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5547,
+        "height": 7531,
+        "bbox": [
+          308139.79125045653,
+          1453619.1443885965,
+          479139.7561863555,
+          1684577.8245083357
+        ],
+        "nodata": null
+      },
+      "resampling": "nearest",
+      "scale": 1,
+      "validCells": 397403,
+      "min": 0.0,
+      "max": 3.0,
+      "target": {
+        "kind": "susceptibility",
+        "min": 0.0,
+        "max": 3.0
+      }
+    },
+    "25": {
+      "path": "rasters/hazards/25yr_flood.tif",
+      "source": "source/rstw2026/hazards/25yr_flood.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5546,
+        "height": 7530,
+        "bbox": [
+          309896.95692583895,
+          1454299.052956564,
+          478937.32693388104,
+          1683811.1312401118
+        ],
+        "nodata": 0.0
+      },
+      "resampling": "nearest",
+      "scale": 1,
+      "validCells": 23478,
+      "min": 1.0,
+      "max": 3.0,
+      "target": {
+        "kind": "susceptibility",
+        "min": 1.0,
+        "max": 3.0
+      }
+    },
+    "100": {
+      "path": "rasters/hazards/100yr_flood.tif",
+      "source": "source/rstw2026/hazards/100yr_flood.tif",
+      "sourceGrid": {
+        "crs": "EPSG:32651",
+        "width": 5482,
+        "height": 7483,
+        "bbox": [
+          311634.2993510929,
+          1454969.6061733286,
+          478723.96909218316,
+          1683049.1389483337
+        ],
+        "nodata": 3.0
+      },
+      "resampling": "nearest",
+      "scale": 1,
+      "validCells": 33279,
+      "min": 0.0,
+      "max": 2.0,
+      "target": {
+        "kind": "susceptibility",
+        "min": 0.0,
+        "max": 2.0
+      }
+    }
+  },
+  "grid": {
+    "crs": "EPSG:4326",
+    "width": 1157,
+    "height": 1536,
+    "bbox": [
+      121.24634170741129,
+      13.155360162253272,
+      122.80372476030136,
+      15.2234380862892
+    ],
+    "pixelSize": [
+      0.0013460527682714566,
+      0.0013464048984608906
+    ],
+    "nodata": -9999
+  },
+  "notes": "Aligned, reduced-resolution derivatives for laptop scenarios. Original class values and source NoData are preserved. Hazard classes are normalized to relative susceptibility scores, not occurrence records.",
+  "temperatureScale": 1
+}

@@ -1,0 +1,33 @@
+{
+  "data": {
+    "municipalities": 40,
+    "barangays": 1243,
+    "inputs": 12,
+    "tempMin": 25.750986099243164,
+    "bounds": [
+      121.24634170741129,
+      13.155360162253272,
+      122.80372476030136,
+      15.2234380862892
+    ],
+    "layers": [
+      "baseline_flood",
+      "baseline_landslide"
+    ]
+  },
+  "atimonanBarangays": 42,
+  "scenario": {
+    "status": "Scenario completed. Toggle baseline and future hazard layers on the map.",
+    "diagnostics": "AOI: TIAONGLandslide samples: 200 used (325 valid class cells)Flood samples: 200 used (3315 valid class cells)Predictors: 9Flood input: 5yr_flood.tifOutput: relative susceptibility scores 0–1; not calibrated probabilities.",
+    "layers": [
+      "baseline_landslide",
+      "baseline_flood",
+      "municipalityBoundary",
+      "future_landslide",
+      "future_flood"
+    ],
+    "landslideFinite": true,
+    "floodFinite": true
+  },
+  "uncaughtExceptions": 0
+}

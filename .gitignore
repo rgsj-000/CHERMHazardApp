@@ -1,2 +1,6 @@
 .superpowers/
 node_modules/
+__pycache__/
+# Original GIS exports and download archive are retained locally; serve the derivatives.
+data/source/
+docs/verification/browser-profile-*/

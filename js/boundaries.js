@@ -1,6 +1,6 @@
 const MUNICIPALITY_FIELDS=['MUNICIPALITY','Municipality','municipality','ADM3_EN','MUN_NAME','MUNICIPALI','NAME_3'];
 const BARANGAY_FIELDS=['BARANGAY','Barangay','barangay','BRGY_NAME','ADM4_EN','NAME_4'];
-const BARANGAY_MUNICIPALITY_FIELDS=['MUNICIPALITY','Municipality','municipality','ADM3_EN','MUN_NAME','MUNICIPALI','NAME_3'];
+const BARANGAY_MUNICIPALITY_FIELDS=['MUNICIPALITY','Municipality','municipality','ADM3_EN','MUN_NAME','MUNICIPALI','Municipali','NAME_3'];
 export function normalizeAdminName(value){return String(value??'').trim().replace(/\s+/g,' ').toLocaleLowerCase();}
 export function detectAdminField(properties={},candidates=[]){return candidates.find(k=>Object.prototype.hasOwnProperty.call(properties,k)&&String(properties[k]??'').trim()!=='')??null;}
 function featureCollectionFeatures(gj,label){if(!gj||gj.type!=='FeatureCollection'||!Array.isArray(gj.features)||!gj.features.length)throw new Error(`${label} GeoJSON must be a non-empty FeatureCollection.`);return gj.features;}
