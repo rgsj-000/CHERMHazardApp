@@ -4,3 +4,5 @@ __pycache__/
 # Original GIS exports and download archive are retained locally; serve the derivatives.
 data/source/
 docs/verification/browser-profile-*/
+# Full local backups include Git metadata and original GIS exports.
+/CHERMHazardApp.zip
