@@ -16,18 +16,25 @@ export function buildTrainingSamples({rasters,hazardId,geometry=null,areaMask=nu
   const cap=Math.max(2,Math.floor(sampleLimit)); const perClass=Math.max(1,Math.floor(cap/2));
   const pos=[],neg=[];let seenPos=0,seenNeg=0,seenClass=0;
   const target=rasters[hazardId].target,classSamples=[],classified=target?.kind==='susceptibility';
+  let areaCells=0,predictorValid=0,hazardValid=0;
+  const missingByPredictor=Object.fromEntries(predictorIds.map(id=>[id,0]));
   for(let row=0;row<base.height;row++)for(let col=0;col<base.width;col++){
     const i=row*base.width+col;
     if(areaMask){if(!areaMask[i])continue;}else if(geometry){const [lon,lat]=pixelCenter(base,row,col);if(!pointInGeometry(lon,lat,geometry))continue;}
+    areaCells++;
+    const raw=Number(rasters[hazardId].data[i]),hasHazard=!isNoData(raw,rasters[hazardId].nodata);
+    if(hasHazard)hazardValid++;
     const values=predictorIds.map(id=>Number(rasters[id].data[i]));
-    if(values.some((v,k)=>isNoData(v,rasters[predictorIds[k]].nodata)))continue;
-    const raw=Number(rasters[hazardId].data[i]);if(isNoData(raw,rasters[hazardId].nodata))continue;
+    let hasPredictors=true;
+    for(let k=0;k<predictorIds.length;k++)if(isNoData(values[k],rasters[predictorIds[k]].nodata)){hasPredictors=false;missingByPredictor[predictorIds[k]]++;}
+    if(hasPredictors)predictorValid++;
+    if(!hasPredictors||!hasHazard)continue;
     const y=classified?(target.max===target.min?0:Math.max(0,Math.min(1,(raw-target.min)/(target.max-target.min)))):occurrence(raw,rasters[hazardId].nodata);
     if(classified){seenClass++;reservoirPush(classSamples,{x:values,y},cap,random,seenClass);continue;}
     const pair={x:values,y};if(y){seenPos++;reservoirPush(pos,pair,perClass,random,seenPos);}else{seenNeg++;reservoirPush(neg,pair,perClass,random,seenNeg);}
   }
   const combined=classified?classSamples:[...neg,...pos];
-  return {X:combined.map(p=>p.x),y:combined.map(p=>p.y),predictorIds,stats:{valid:classified?seenClass:seenPos+seenNeg,positive:seenPos,negative:seenNeg,used:combined.length,targetKind:classified?'susceptibility':'occurrence'}};
+  return {X:combined.map(p=>p.x),y:combined.map(p=>p.y),predictorIds,stats:{areaCells,predictorValid,hazardValid,missingByPredictor,valid:classified?seenClass:seenPos+seenNeg,positive:seenPos,negative:seenNeg,used:combined.length,targetKind:classified?'susceptibility':'occurrence'}};
 }
 
 export function trainHazardModel({samples,trees=35,random=Math.random}){

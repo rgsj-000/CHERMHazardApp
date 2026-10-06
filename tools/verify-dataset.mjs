@@ -77,8 +77,20 @@ try{
   await evaluate("document.getElementById('floodPeriod').value='25';document.getElementById('floodPeriod').dispatchEvent(new Event('change'))");
   await waitFor("document.getElementById('status').textContent.startsWith('25-year flood raster loaded')");
   assert.ok(await evaluate("(async()=>{const {appState}=await import('/js/state.js');return !appState.mapLayers.future_flood&&!appState.mapLayers.future_landslide;})()"));
+  await evaluate("document.getElementById('municipality').value='ATIMONAN';document.getElementById('municipality').dispatchEvent(new Event('change'));document.getElementById('barangay').value='Magsaysay';document.getElementById('barangay').dispatchEvent(new Event('change'));document.getElementById('lcValue').value='26';document.getElementById('trees').value='35';document.getElementById('samples').value='1000';document.getElementById('runScenario').click()");
+  await waitFor("document.getElementById('status').textContent.startsWith('Landslide scenario completed')||document.getElementById('status').textContent.startsWith('Model stopped')||document.getElementById('status').textContent.startsWith('No future hazard')");
+  const partial=await evaluate("(async()=>{const {appState}=await import('/js/state.js');return {status:document.getElementById('status').textContent,diagnostics:document.getElementById('diagnostics').textContent,layers:Object.keys(appState.mapLayers),landslideFinite:appState.model.futureLandslide?.data.some(Number.isFinite),floodMissing:appState.model.futureFlood===null};})()");
+  assert.match(partial.status,/Landslide scenario completed.*25yr_flood\.tif/);
+  assert.match(partial.diagnostics,/Magsaysay, ATIMONAN/);
+  assert.match(partial.diagnostics,/0 valid hazard cells/);
+  assert.ok(partial.landslideFinite&&partial.floodMissing);
+  assert.ok(partial.layers.includes('future_landslide')&&!partial.layers.includes('future_flood'));
+  console.log('Atimonan / Magsaysay / 25-year regression verified.',JSON.stringify(partial));
+  await evaluate("document.querySelector('.sidebar').scrollTop=2000");
+  const partialScreenshot=await send('Page.captureScreenshot',{format:'png'});
+  await writeFile(new URL('atimonan-magsaysay-25yr.png',base),Buffer.from(partialScreenshot.data,'base64'));
   assert.deepEqual(errors,[]);
-  const report={data,atimonanBarangays:barangays,scenario,uncaughtExceptions:errors.length};
+  const report={data,atimonanBarangays:barangays,scenario,partial,uncaughtExceptions:errors.length};
   await writeFile(new URL('rstw2026-check.json',base),JSON.stringify(report,null,2)+'\n');
   console.log('Future results are cleared on input change; no uncaught browser exceptions.');
 }finally{

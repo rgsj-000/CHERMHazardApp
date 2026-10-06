@@ -22,6 +22,8 @@ The supplied temperature values are stored in tenths of °C, confirmed by the da
 
 The hazard files contain class maps, rather than event occurrence records. Bundled model targets are class values normalized to 0–1 over the valid range recorded in the manifest. Original NoData is preserved, including 0 in the landslide/25-year flood rasters and 3 in the 100-year flood raster; masked cells are not relabeled as nonoccurrence. Some small areas may contain insufficient valid cells or only one class; select a larger area when the model reports this. Confirm the source hazard class meanings before operational interpretation.
 
+Landslide and flood scenarios finish independently. If one hazard has no usable training cells or class variation, its explanation appears in the status and Diagnostics, while the available hazard layer remains visible. Diagnostics distinguish area cells, complete predictor cells, valid hazard labels and overlapping training cells. For example, **Magsaysay, Atimonan has no valid 25-year flood labels** in the supplied dataset; its landslide scenario can still run. Such missing coverage does not mean zero flood susceptibility.
+
 Distance to coast and flow accumulation join the model as optional predictors when loaded. Their removal buttons let you omit them. When a required input is replaced with data on another grid, incompatible bundled optional predictors are cleared automatically. Future land cover remains internal to the model.
 
 To regenerate the prepared files, install the development GIS requirements and run:
@@ -126,7 +128,7 @@ For local browser verification with an installed headless Edge/Chrome and a runn
 node tools/verify-dataset.mjs http://127.0.0.1:8765/
 ```
 
-An optional second argument selects the browser executable. This checks automatic loading, alignment, temperature scaling, barangay filtering, all flood return periods, a complete Tiaong scenario (5 trees / 200 samples), and clearing old outputs after input changes. The screenshot and report are saved in `docs/verification/`. The scenario reuses one rasterized area mask to avoid repeated polygon scans.
+An optional second argument selects the browser executable. This checks automatic loading, alignment, temperature scaling, barangay filtering, all flood return periods, a complete Tiaong scenario (5 trees / 200 samples), clearing old outputs after input changes, and the Magsaysay/Atimonan 25-year coverage gap (35 trees / 1,000 samples). Screenshots and the report are saved in `docs/verification/`. The scenario reuses one rasterized area mask to avoid repeated polygon scans.
 
 Pinned browser runtime versions:
 
