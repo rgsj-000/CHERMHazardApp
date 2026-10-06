@@ -1,7 +1,7 @@
 import { appState } from './state.js';
 import { loadDataset,loadDatasetRaster,scaleTemperature,removeIncompatibleBundledPredictors } from './dataset.js';
 import { runScenarioModels } from './scenario-runner.js';
-import { setStatus,setProgress,appendLog,setOnlineStatus,setDiagnostics,syncRangeAndNumber } from './ui.js';
+import { setStatus,setProgress,setMapContext,appendLog,setOnlineStatus,setDiagnostics,syncRangeAndNumber } from './ui.js';
 import { buildBoundaryIndex,municipalityNames,barangaysForMunicipality,getMunicipalityFeature,getBarangayFeature } from './boundaries.js';
 import { readGeoTiff,validateAlignedRasters,rasterCellCount } from './raster.js';
 import { validateScenario } from './scenario.js';
@@ -21,7 +21,11 @@ const $=id=>typeof document==='undefined'?null:document.getElementById(id);
 let LRuntime=null,GeoTIFFRuntime=null,osmLayer=null,localBasemapLayer=null,landslideLegend=null,floodLegend=null;
 let bundledDataset=null,bundledTemperature=null,loadingDataset=false,activeFloodPeriod=null;
 
-function lockControls(locked){for(const control of document.querySelectorAll('.sidebar input,.sidebar select,.sidebar button'))control.disabled=locked;}
+function lockControls(locked){
+  for(const control of document.querySelectorAll('.sidebar input,.sidebar select,.sidebar button'))control.disabled=locked;
+  $('runScenario').setAttribute('aria-busy',String(appState.running));
+  $('runScenario').querySelector('span').textContent=appState.running?'Running scenario…':loadingDataset?'Loading data…':'Run complete scenario';
+}
 function clearFutureOutputs(){
   for(const key of ['future_landslide','future_flood'])removeLayer(key);
   appState.model={futureLandcover:null,futureLandslide:null,futureFlood:null};
@@ -75,6 +79,7 @@ export async function loadBundledDataset(){
     setStatus('RSTW2026 data ready. Select a Municipality, then run a scenario.','success');
   }catch(error){
     $('datasetStatus').textContent='Bundled data could not be loaded. Reload or choose local files below.';
+    $('dataSettings').open=true;
     setStatus(error.message,'error');appendLog(error.stack||error.message);
   }finally{loadingDataset=false;lockControls(false);}
 }
@@ -98,7 +103,17 @@ function currentGeometry(){return appState.selection.geometry;}
 function removeLayer(key){const layer=appState.mapLayers[key];if(layer&&appState.map?.hasLayer(layer))appState.map.removeLayer(layer);delete appState.mapLayers[key];}
 function overlayDictionary(){const entries={};const labels={municipalityBoundary:'Municipality boundary',barangayBoundary:'Barangay boundary',baseline_landslide:'Present landslide',baseline_flood:'Present flood',future_landslide:'Future landslide',future_flood:'Future flood'};for(const [key,label] of Object.entries(labels))if(appState.mapLayers[key])entries[label]=appState.mapLayers[key];return entries;}
 function baseDictionary(){const bases={};if(osmLayer)bases['OpenStreetMap']=osmLayer;if(localBasemapLayer)bases['Local basemap']=localBasemapLayer;return bases;}
-function refreshLayers(){if(!appState.map||!LRuntime)return;appState.layerControl=refreshLayerControl(LRuntime,appState.map,appState.layerControl,baseDictionary(),overlayDictionary());const keys=visibleOutputKeys().filter(k=>appState.mapLayers[k]);$('layerList').textContent=keys.length?keys.map(k=>k.replaceAll('_',' ')).join(' · '):'No hazard outputs yet.';}
+function refreshLayers(){
+  if(!appState.map||!LRuntime)return;
+  appState.layerControl=refreshLayerControl(LRuntime,appState.map,appState.layerControl,baseDictionary(),overlayDictionary());
+  const keys=visibleOutputKeys().filter(k=>appState.mapLayers[k]);
+  $('layerList').replaceChildren(...keys.map(key=>{
+    const chip=document.createElement('span');chip.className=`layer-chip${key.startsWith('future')?' future':''}`;
+    chip.textContent=key.replace('baseline','Present').replace('future','Future').replace('_',' ');return chip;
+  }));
+  if(!keys.length)$('layerList').textContent='No hazard outputs yet.';
+  setMapContext({...appState.selection,floodPeriod:activeFloodPeriod,hasFlood:Boolean(appState.rasters.flood),inputCount:Object.keys(appState.rasters).length});
+}
 
 async function readJsonFile(file){if(!file)throw new Error('No GeoJSON file selected.');const text=await file.text();const value=JSON.parse(text);if(value.type!=='FeatureCollection')throw new Error('Boundary file must be a GeoJSON FeatureCollection.');return value;}
 function populateMunicipalities(){const select=$('municipality');select.innerHTML='<option value="">Select municipality</option>';for(const name of municipalityNames(appState.boundaries.index)){const o=document.createElement('option');o.value=name;o.textContent=name;select.appendChild(o);} $('barangay').innerHTML='<option value="">All barangays</option>';}
@@ -147,7 +162,7 @@ function scenarioFromUi(){return validateScenario({baselineYear:$('baselineYear'
 
 export async function runCompleteScenario(){
   if(appState.running||loadingDataset)return;
-  if(!appState.selection.municipality){setStatus('Select a Municipality before running the model.','error');throw new Error('Select a Municipality before running the model.');}
+  if(!appState.selection.municipality){setStatus('Select a Municipality before running the model.','error');$('municipality').focus();throw new Error('Select a Municipality before running the model.');}
   appState.running=true;lockControls(true);clearFutureOutputs();refreshLayers();
   try{
     setStatus('Validating raster inputs…','info');
@@ -185,7 +200,7 @@ export async function runCompleteScenario(){
 function updateNetworkState(){const online=navigator.onLine;if(!appState.map)return;const mode=selectBasemapMode({online,hasLocal:Boolean(localBasemapLayer)});if(mode==='osm'&&!osmLayer){osmLayer=addOnlineOSM(LRuntime,appState.map);osmLayer.on('tileerror',()=>{setOnlineStatus(false,'Neutral background');});}if(!online&&osmLayer&&appState.map.hasLayer(osmLayer))appState.map.removeLayer(osmLayer);if(online&&osmLayer&&!localBasemapLayer&&!appState.map.hasLayer(osmLayer))osmLayer.addTo(appState.map);setOnlineStatus(online,mode==='local'?'Local basemap':mode==='osm'?'OpenStreetMap':'Neutral background');refreshLayers();}
 function initRasterInputs(){
   const host=$('rasterInputs');
-  host.innerHTML=RASTER_DEFS.map(({id,label,optional})=>`<label for="file_${id}">${label}</label><span id="loaded_${id}" class="hint">No raster loaded</span><input id="file_${id}" type="file" accept=".tif,.tiff">${optional?`<button id="clear_${id}" type="button">Remove ${label.replace(' (optional)','').toLowerCase()}</button>`:''}`).join('');
+  host.innerHTML=RASTER_DEFS.map(({id,label,optional})=>`<div class="raster-input"><label for="file_${id}">${label}</label><span id="loaded_${id}" class="hint">No raster loaded</span><input id="file_${id}" type="file" accept=".tif,.tiff" aria-describedby="loaded_${id}">${optional?`<button id="clear_${id}" class="secondary-button" type="button">Remove ${label.replace(' (optional)','').toLowerCase()}</button>`:''}</div>`).join('');
   for(const {id,optional} of RASTER_DEFS){
     $(`file_${id}`).addEventListener('change',e=>rasterChanged(id,e.target.files[0]));
     if(optional)$(`clear_${id}`).addEventListener('click',()=>{

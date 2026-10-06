@@ -42,5 +42,58 @@
     "landslideFinite": true,
     "floodMissing": true
   },
+  "responsive": [
+    {
+      "width": 375,
+      "pageWidth": 360,
+      "overflowingControls": [],
+      "mapHeight": 650,
+      "checkboxWidth": 16
+    },
+    {
+      "width": 768,
+      "pageWidth": 753,
+      "overflowingControls": [],
+      "mapHeight": 650,
+      "checkboxWidth": 16
+    },
+    {
+      "width": 1024,
+      "pageWidth": 1024,
+      "overflowingControls": [],
+      "mapHeight": 795.109375,
+      "checkboxWidth": 16
+    },
+    {
+      "width": 1440,
+      "pageWidth": 1440,
+      "overflowingControls": [],
+      "mapHeight": 795.109375,
+      "checkboxWidth": 16
+    }
+  ],
+  "shortScreen": {
+    "layers": {
+      "left": 1076.4375,
+      "right": 1270,
+      "top": 170.890625,
+      "bottom": 342.890625
+    },
+    "legends": [
+      {
+        "left": 1134.546875,
+        "right": 1270,
+        "top": 382.484375,
+        "bottom": 523.609375
+      },
+      {
+        "left": 967.53125,
+        "right": 1124.546875,
+        "top": 382.484375,
+        "bottom": 523.609375
+      }
+    ],
+    "overlap": false
+  },
   "uncaughtExceptions": 0
 }
