@@ -19,6 +19,8 @@
   <aside class="sidebar">
     <section class="panel">
       <h2>1. Area of Interest</h2>
+      <button id="loadBundledDataset" type="button">Reload RSTW2026 data</button>
+      <p id="datasetStatus" class="hint" role="status">Loading bundled Quezon boundaries and rasters…</p>
       <label for="municipalityFile">Municipality polygons (GeoJSON)</label>
       <input id="municipalityFile" type="file" accept=".geojson,.json">
       <label for="barangayFile">Barangay polygons (GeoJSON)</label>
@@ -31,6 +33,11 @@
 
     <section class="panel">
       <h2>2. Environmental Rasters</h2>
+      <label for="floodPeriod">Bundled flood return period</label>
+      <select id="floodPeriod"><option value="5">5-year flood</option><option value="25">25-year flood</option><option value="100">100-year flood</option></select>
+      <label for="temperatureScale">Bundled temperature units</label>
+      <select id="temperatureScale"><option value="0.1">Tenths of °C (divide by 10)</option><option value="1">Source values are already °C</option></select>
+      <p class="hint">Prepared grid: approximately 150 m. Original resolution is kept in data/source/. Temperature units can be changed above.</p>
       <div id="rasterInputs"></div>
       <p class="hint">GeoTIFF rasters must use the same CRS, dimensions, extent, cell size and alignment.</p>
     </section>
@@ -64,7 +71,7 @@
       <h2>5. Run Model</h2>
       <button id="runScenario" type="button">Run complete scenario</button>
       <div class="progress" aria-label="model progress"><div id="progressBar"></div></div>
-      <div id="status" class="status info">Load administrative boundaries and rasters to begin.</div>
+      <div id="status" class="status info">Loading RSTW2026 data…</div>
     </section>
 
     <section class="panel">

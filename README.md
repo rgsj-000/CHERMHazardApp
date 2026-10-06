@@ -2,7 +2,37 @@
 
 A laptop-friendly browser application for exploring scenario-based impacts of climate and land-cover change on **rain-induced landslide** and **flood** susceptibility.
 
-The simulator reads environmental rasters directly from the user's laptop, models future land cover internally, trains separate Random Forest regressors for landslide and flooding, and overlays baseline and future hazard rasters on an interactive Municipality/Barangay map.
+The simulator automatically loads the bundled RSTW2026 Quezon dataset, supports replacement inputs from the user's laptop, models future land cover internally, trains separate Random Forest regressors for landslide and flooding, and overlays baseline and future hazard rasters on an interactive Municipality/Barangay map.
+
+## Bundled RSTW2026 data
+
+Launch `start.bat`, wait for the dataset to load, select a Municipality (and optionally a Barangay), then run a scenario. File selection is only needed to replace bundled inputs. Use **Reload RSTW2026 data** to restore the defaults.
+
+* `data/boundaries/`: WGS 84 GeoJSON for 40 municipalities and 1,243 barangays.
+* `data/rasters/predictors/`: elevation, slope, river/urban/coast distance, rainfall, temperature and flow accumulation.
+* `data/rasters/landcover/`: past and present land cover.
+* `data/rasters/hazards/`: landslide and 5-, 25- and 100-year flood rasters. The default flood return period is 5 years; change it using the selector in the app.
+* `data/dataset.json`: file paths, common grid, source metadata, valid-cell counts, resampling and hazard target ranges.
+* `data/source/rstw2026/`: original-resolution rasters, shapefiles, source GeoJSON and companion files organized by type.
+* `data/source/archives/`: original download ZIP. Source files are retained locally and excluded from Git; the browser loads only prepared derivatives.
+
+The original UTM zone 51N inputs had different dimensions and extents. Their prepared derivatives share an EPSG:4326 grid of **1,157 × 1,536 cells**, approximately **150 m** per cell, based on the elevation raster extent and masked to the municipality boundaries. Continuous predictors use bilinear resampling; land-cover and hazard class rasters use nearest-neighbor resampling. The 14 prepared rasters total approximately 13 MB. These reduced-resolution inputs are intended for laptop scenario exploration; small features can be lost during resampling.
+
+The supplied temperature values are stored in tenths of °C, confirmed by the dataset owner. The app divides by 10 when loading bundled temperatures, preserving NoData. The units selector applies only to the bundled input; manually selected temperature rasters must already use °C.
+
+The hazard files contain class maps, rather than event occurrence records. Bundled model targets are class values normalized to 0–1 over the valid range recorded in the manifest. Original NoData is preserved, including 0 in the landslide/25-year flood rasters and 3 in the 100-year flood raster; masked cells are not relabeled as nonoccurrence. Some small areas may contain insufficient valid cells or only one class; select a larger area when the model reports this. Confirm the source hazard class meanings before operational interpretation.
+
+Distance to coast and flow accumulation join the model as optional predictors when loaded. Their removal buttons let you omit them. When a required input is replaced with data on another grid, incompatible bundled optional predictors are cleared automatically. Future land cover remains internal to the model.
+
+To regenerate the prepared files, install the development GIS requirements and run:
+
+```text
+python -m pip install -r tools/requirements-gis.txt
+python tools/prepare-data.py
+python tests/prepare-data.test.py
+```
+
+The preparation script keeps temperature values in their source units; the app handles their confirmed scale. Use `--max-dimension 3072` to prepare a finer grid, with increased memory and processing costs. No Python or GIS software is needed during normal app use. Preparation follows [Rasterio's reprojection](https://rasterio.readthedocs.io/en/stable/topics/reproject.html) and [resampling](https://rasterio.readthedocs.io/en/stable/topics/resampling.html) APIs.
 
 ## What the app does
 
@@ -60,11 +90,13 @@ Download or clone the repository **after the `vendor/` folder has been populated
 start.bat
 ```
 
-The launcher uses Windows PowerShell's built-in `HttpListener` and opens:
+The launcher uses Windows PowerShell and .NET's built-in loopback TCP server. It opens the browser automatically and prints the app address in the launcher window, normally:
 
 ```text
-http://localhost:8000/
+http://127.0.0.1:8000/
 ```
+
+If port 8000 is occupied or reserved, the launcher selects another available port. Keep the launcher window open while using the app; closing it stops the local server. Startup errors stay visible rather than disappearing when the batch window closes. Administrator privileges are not required.
 
 No Python, Node.js, QGIS, ArcGIS, database or internet connection is required for normal Windows use once the repository contains the vendored browser assets.
 
@@ -87,6 +119,14 @@ npm install --ignore-scripts
 npm run vendor
 npm test
 ```
+
+For local browser verification with an installed headless Edge/Chrome and a running static server:
+
+```text
+node tools/verify-dataset.mjs http://127.0.0.1:8765/
+```
+
+An optional second argument selects the browser executable. This checks automatic loading, alignment, temperature scaling, barangay filtering, all flood return periods, a complete Tiaong scenario (5 trees / 200 samples), and clearing old outputs after input changes. The screenshot and report are saved in `docs/verification/`. The scenario reuses one rasterized area mask to avoid repeated polygon scans.
 
 Pinned browser runtime versions:
 
@@ -124,7 +164,7 @@ susceptibility        susceptibility
          Leaflet map overlays
 ```
 
-Training uses bounded, approximately class-balanced reservoir samples within the selected Municipality or Barangay. NoData, nonfinite values and cells outside the active polygon are excluded.
+Training uses bounded reservoir samples within the selected Municipality or Barangay. Bundled class-map targets use a uniform sample and normalized class scores. Manual occurrence inputs retain the approximately balanced occurrence/nonoccurrence sampling. NoData, nonfinite values and cells outside the active polygon are excluded.
 
 ## Laptop guidance
 
