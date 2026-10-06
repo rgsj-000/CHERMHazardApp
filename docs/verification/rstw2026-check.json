@@ -18,7 +18,7 @@
   "atimonanBarangays": 42,
   "scenario": {
     "status": "Scenario completed. Toggle baseline and future hazard layers on the map.",
-    "diagnostics": "AOI: TIAONGLandslide samples: 200 used (325 valid class cells)Flood samples: 200 used (3315 valid class cells)Predictors: 9Flood input: 5yr_flood.tifOutput: relative susceptibility scores 0–1; not calibrated probabilities.",
+    "diagnostics": "AOI: TIAONGLandslide (landslide.tif): 200 samples; 3346 area cells, 3315 complete predictor cells, 331 valid hazard cells, 325 overlapping cells.Flood (5yr_flood.tif): 200 samples; 3346 area cells, 3315 complete predictor cells, 3346 valid hazard cells, 3315 overlapping cells.Output: relative susceptibility scores 0–1; not calibrated probabilities.",
     "layers": [
       "baseline_landslide",
       "baseline_flood",
@@ -28,6 +28,19 @@
     ],
     "landslideFinite": true,
     "floodFinite": true
+  },
+  "partial": {
+    "status": "Landslide scenario completed. Flood unavailable: No valid flood labels are available in 25yr_flood.tif for the selected area. Choose another flood return period or an area with flood coverage.",
+    "diagnostics": "AOI: Magsaysay, ATIMONANLandslide (landslide.tif): 158 samples; 172 area cells, 172 complete predictor cells, 158 valid hazard cells, 158 overlapping cells.Flood (25yr_flood.tif): 0 samples; 172 area cells, 172 complete predictor cells, 0 valid hazard cells, 0 overlapping cells.No valid flood labels are available in 25yr_flood.tif for the selected area. Choose another flood return period or an area with flood coverage.Output: relative susceptibility scores 0–1; not calibrated probabilities.",
+    "layers": [
+      "baseline_landslide",
+      "baseline_flood",
+      "municipalityBoundary",
+      "barangayBoundary",
+      "future_landslide"
+    ],
+    "landslideFinite": true,
+    "floodMissing": true
   },
   "uncaughtExceptions": 0
 }

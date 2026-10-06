@@ -1,12 +1,11 @@
 import { appState } from './state.js';
 import { loadDataset,loadDatasetRaster,scaleTemperature,removeIncompatibleBundledPredictors } from './dataset.js';
-import { createAreaMask } from './area-mask.js';
+import { runScenarioModels } from './scenario-runner.js';
 import { setStatus,setProgress,appendLog,setOnlineStatus,setDiagnostics,syncRangeAndNumber } from './ui.js';
 import { buildBoundaryIndex,municipalityNames,barangaysForMunicipality,getMunicipalityFeature,getBarangayFeature } from './boundaries.js';
 import { readGeoTiff,validateAlignedRasters,rasterCellCount } from './raster.js';
 import { validateScenario } from './scenario.js';
-import { projectFutureLandcover } from './landcover.js';
-import { buildTrainingSamples,trainHazardModel,predictHazardSurface,PREDICTOR_IDS } from './hazard-model.js';
+import { PREDICTOR_IDS } from './hazard-model.js';
 import { createMap,addOnlineOSM,addBoundaryLayer,fitFeature,addRasterOverlay,addLocalBasemap,createLegend,refreshLayerControl,selectBasemapMode } from './map.js';
 
 export const RASTER_DEFS=[
@@ -146,19 +145,42 @@ async function localBasemapChanged(file){
 }
 function scenarioFromUi(){return validateScenario({baselineYear:$('baselineYear').value,futureYear:$('futureYear').value,rainChange:$('rainValue').value,rainMode:$('rainMode').value,tempChange:$('tempValue').value,tempMode:$('tempMode').value,landcoverIntensity:$('lcValue').value});}
 
-export async function runCompleteScenario(){if(appState.running||loadingDataset)return;if(!appState.selection.municipality){setStatus('Select a Municipality before running the model.','error');throw new Error('Select a Municipality before running the model.');}appState.running=true;lockControls(true);try{
-  setProgress(0);setStatus('Validating aligned raster inputs…','info');const base=validateAlignedRasters(appState.rasters,requiredModelRasterIds());const scenario=scenarioFromUi(),geometry=currentGeometry();
-  const areaMask=createAreaMask(base,geometry);
-  await new Promise(resolve=>setTimeout(resolve,0));
-  setProgress(10);setStatus('Projecting future land cover internally…','info');appState.model.futureLandcover=projectFutureLandcover({pastRaster:appState.rasters.pastLC,presentRaster:appState.rasters.presentLC,geometry,areaMask,baselineYear:scenario.baselineYear,futureYear:scenario.futureYear,intensity:scenario.landcoverIntensity});appendLog('Future land cover calculated as an internal predictor. It is not displayed on the map.');
-  setProgress(25);setStatus('Training landslide Random Forest…','info');const lSamples=buildTrainingSamples({rasters:appState.rasters,hazardId:'landslide',geometry,areaMask,maxSamples:Number($('samples').value)});const lModel=trainHazardModel({samples:lSamples,trees:Number($('trees').value)});
-  appState.model.futureLandslide=await predictHazardSurface({rasters:appState.rasters,hazardId:'landslide',model:lModel,geometry,areaMask,futureLandcover:appState.model.futureLandcover,scenario,yieldFn:async p=>{setProgress(35+p*25);await new Promise(r=>setTimeout(r,0));}});removeLayer('future_landslide');appState.mapLayers.future_landslide=addRasterOverlay(LRuntime,appState.map,appState.model.futureLandslide,{kind:'landslide',opacity:.72});
-  setStatus('Training flood Random Forest…','info');const fSamples=buildTrainingSamples({rasters:appState.rasters,hazardId:'flood',geometry,areaMask,maxSamples:Number($('samples').value)});const fModel=trainHazardModel({samples:fSamples,trees:Number($('trees').value)});
-  appState.model.futureFlood=await predictHazardSurface({rasters:appState.rasters,hazardId:'flood',model:fModel,geometry,areaMask,futureLandcover:appState.model.futureLandcover,scenario,yieldFn:async p=>{setProgress(65+p*30);await new Promise(r=>setTimeout(r,0));}});removeLayer('future_flood');appState.mapLayers.future_flood=addRasterOverlay(LRuntime,appState.map,appState.model.futureFlood,{kind:'flood',opacity:.65});
-  if(landslideLegend)appState.map.removeControl(landslideLegend);if(floodLegend)appState.map.removeControl(floodLegend);landslideLegend=createLegend(LRuntime,'landslide').addTo(appState.map);floodLegend=createLegend(LRuntime,'flood').addTo(appState.map);refreshLayers();
-  const sampleSummary=s=>s.stats.targetKind==='susceptibility'?`${s.stats.used} used (${s.stats.valid} valid class cells)`:`${s.stats.used} used (${s.stats.positive} occurrence / ${s.stats.negative} nonoccurrence valid)`;
-  setDiagnostics(`<b>AOI:</b> ${appState.selection.barangay?`${appState.selection.barangay}, `:''}${appState.selection.municipality}<br><b>Landslide samples:</b> ${sampleSummary(lSamples)}<br><b>Flood samples:</b> ${sampleSummary(fSamples)}<br><b>Predictors:</b> ${lSamples.predictorIds.length}<br><b>Flood input:</b> ${appState.rasters.flood.name}<br><b>Output:</b> relative susceptibility scores 0–1; not calibrated probabilities.`);setProgress(100);setStatus('Scenario completed. Toggle baseline and future hazard layers on the map.','success');appendLog('Scenario complete.');
- }catch(e){setStatus(`Model stopped: ${e.message}`,'error');appendLog(e.stack||e.message);throw e;}finally{appState.running=false;lockControls(false);}}
+export async function runCompleteScenario(){
+  if(appState.running||loadingDataset)return;
+  if(!appState.selection.municipality){setStatus('Select a Municipality before running the model.','error');throw new Error('Select a Municipality before running the model.');}
+  appState.running=true;lockControls(true);clearFutureOutputs();refreshLayers();
+  try{
+    setStatus('Validating raster inputs…','info');
+    const result=await runScenarioModels({rasters:appState.rasters,geometry:currentGeometry(),scenario:scenarioFromUi(),trees:Number($('trees').value),maxSamples:Number($('samples').value),
+      onProgress:async(percent,message)=>{setProgress(percent);setStatus(message,'info');await new Promise(resolve=>setTimeout(resolve,0));},
+      onHazard:async(id,hazard)=>{
+        if(hazard.output){
+          appState.model[id==='landslide'?'futureLandslide':'futureFlood']=hazard.output;
+          appState.mapLayers[`future_${id}`]=addRasterOverlay(LRuntime,appState.map,hazard.output,{kind:id,opacity:id==='landslide'?.72:.65});
+          const legend=createLegend(LRuntime,id).addTo(appState.map);
+          if(id==='landslide')landslideLegend=legend;else floodLegend=legend;
+          appendLog(`${id} scenario completed: ${hazard.samples.stats.used} training samples.`);
+        }else appendLog(`${id} unavailable: ${hazard.error}`);
+        refreshLayers();
+      }
+    });
+    appState.model.futureLandcover=result.futureLandcover;
+    const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const area=`${appState.selection.barangay?`${appState.selection.barangay}, `:''}${appState.selection.municipality}`;
+    const details=Object.entries(result.hazards).map(([id,hazard])=>{
+      const s=hazard.samples.stats,title=id==='landslide'?'Landslide':'Flood';
+      return `<br><b>${title} (${escape(appState.rasters[id].name)}):</b> ${s.used} samples; ${s.areaCells} area cells, ${s.predictorValid} complete predictor cells, ${s.hazardValid} valid hazard cells, ${s.valid} overlapping cells.${hazard.error?`<br>${escape(hazard.error)}`:''}`;
+    }).join('');
+    setDiagnostics(`<b>AOI:</b> ${escape(area)}${details}<br><b>Output:</b> relative susceptibility scores 0–1; not calibrated probabilities.`);
+    const available=Object.entries(result.hazards).filter(([,hazard])=>hazard.output).map(([id])=>id);
+    const unavailable=Object.entries(result.hazards).filter(([,hazard])=>hazard.error).map(([id,hazard])=>`${id==='flood'?'Flood':'Landslide'} unavailable: ${hazard.error}`);
+    setProgress(100);
+    if(available.length===2)setStatus('Scenario completed. Toggle baseline and future hazard layers on the map.','success');
+    else if(available.length)setStatus(`${available[0]==='landslide'?'Landslide':'Flood'} scenario completed. ${unavailable.join(' ')}`,'info');
+    else setStatus(`No future hazard layers could be generated. ${unavailable.join(' ')}`,'error');
+  }catch(error){setStatus(`Model stopped: ${error.message}`,'error');appendLog(error.stack||error.message);throw error;}
+  finally{appState.running=false;lockControls(false);}
+}
 
 function updateNetworkState(){const online=navigator.onLine;if(!appState.map)return;const mode=selectBasemapMode({online,hasLocal:Boolean(localBasemapLayer)});if(mode==='osm'&&!osmLayer){osmLayer=addOnlineOSM(LRuntime,appState.map);osmLayer.on('tileerror',()=>{setOnlineStatus(false,'Neutral background');});}if(!online&&osmLayer&&appState.map.hasLayer(osmLayer))appState.map.removeLayer(osmLayer);if(online&&osmLayer&&!localBasemapLayer&&!appState.map.hasLayer(osmLayer))osmLayer.addTo(appState.map);setOnlineStatus(online,mode==='local'?'Local basemap':mode==='osm'?'OpenStreetMap':'Neutral background');refreshLayers();}
 function initRasterInputs(){
